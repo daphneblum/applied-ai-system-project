@@ -2,7 +2,7 @@
 
 ## 1. Model Name  
 
-**FeatureMatch 1.0**
+MoodMatch 1.0
 
 ---
 
