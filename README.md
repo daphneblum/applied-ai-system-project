@@ -17,21 +17,54 @@ Replace this paragraph with your own summary of what your version does.
 
 ## How The System Works
 
-Explain your design in plain language.
-
-Some prompts to answer:
-
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
-
-You can include a simple diagram or bullet list if helpful.
-
 Real-world recommenders like Spotify and YouTube learn your taste by watching what you play, skip, and save, then find patterns across millions of users to predict what you will enjoy next. They combine two main ideas: collaborative filtering, which says "people who liked the same things you did also loved this," and content-based filtering, which says "this song sounds and feels like the ones you already enjoy." In practice, those systems run on massive amounts of data and continuously update as your behavior changes.
 
-This version focuses on content-based filtering using a small catalog of 10 songs. Each song is described by five numerical features: energy, valence, tempo, acousticness, and danceability, plus a mood label. A user profile stores that same set of preferences. The recommender scores every song by measuring how close each of its features is to the user's preferences, applies weights so that more important features (like energy and valence) count more than less important ones (like danceability), and adds a small bonus when the song's mood matches the user's preferred mood. Songs are then ranked highest to lowest by their total score and the top matches are returned. The priority here is transparency: every recommendation can be explained by pointing directly at which features matched and by how much.
+This version focuses on content-based filtering using a catalog of 20 songs. Each song is described by five numerical features — energy, valence, tempo, acousticness, and danceability — plus two categorical labels: genre and mood. A user profile stores target values for each numerical feature and a list of acceptable moods. The recommender scores every song by measuring how close each of its features is to the user's targets, applies weights so that more important features count more, and adds small bonuses when the song's genre or mood matches. Songs are then ranked by total score and the top K are returned. Every recommendation can be explained by pointing directly at which features matched and by how much.
+
+### Algorithm Recipe
+
+**Step 1 — Load the catalog**
+Parse `data/songs.csv` into a list of song dictionaries, one per row.
+
+**Step 2 — Score each song**
+For every song, compute a closeness score for each numerical feature:
+
+```
+feature_score = 1 − | user_target − song_value |
+```
+
+Tempo is first normalized to [0, 1] using the catalog's min/max range (60–168 BPM) before applying the same formula.
+
+**Step 3 — Apply categorical bonuses**
+- Add `genre_bonus` (0.05) if `song["genre"] == user["favorite_genre"]`
+- Add `mood_bonus` (0.05) if `song["mood"]` is in `user["acceptable_moods"]`
+
+**Step 4 — Compute the weighted total**
+
+```
+score = (energy       × 0.30)
+      + (valence      × 0.20)
+      + (tempo        × 0.15)
+      + (acousticness × 0.15)
+      + (danceability × 0.10)
+      + genre_bonus
+      + mood_bonus
+```
+
+Weights sum to 1.0. Energy is weighted highest because it most strongly determines the overall vibe.
+
+**Step 5 — Rank and return**
+Sort all (song, score, reasons) tuples by score descending and slice the top K results.
+
+### Potential Biases
+
+| Bias | Description |
+|---|---|
+| **Energy dominance** | With a 0.30 weight, energy is the single biggest driver. A song that perfectly matches every other feature but misses on energy will still score poorly. |
+| **Genre sparsity** | Most genres appear only once in the 20-song catalog. A genre match is effectively a pointer to a single song, which means the genre bonus disproportionately benefits whichever one song fits the label. |
+| **Mood label subjectivity** | Mood labels ("chill", "focused", "relaxed") are manually assigned and culturally subjective. Two songs that feel identical to a listener may carry different labels and score differently. |
+| **No feedback loop** | The system has no way to learn from skips, replays, or saves. A user who hates the top recommendation gets the same result every time. |
+| **Single-profile design** | Scores are computed for one user at a time with no collaborative signal. Niche or unusual taste profiles are served just as well (or as poorly) as common ones. |
 
 ---
 
