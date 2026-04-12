@@ -50,24 +50,85 @@ def load_songs(csv_path: str) -> List[Dict]:
     Loads songs from a CSV file.
     Required by src/main.py
     """
-    # TODO: Implement CSV loading logic
-    print(f"Loading songs from {csv_path}...")
-    return []
+    import csv
+
+    int_fields   = {"id", "tempo_bpm"}
+    float_fields = {"energy", "valence", "danceability", "acousticness"}
+
+    songs = []
+    with open(csv_path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            for field in int_fields:
+                row[field] = int(row[field])
+            for field in float_fields:
+                row[field] = float(row[field])
+            songs.append(row)
+    return songs
 
 def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
     """
     Scores a single song against user preferences.
     Required by recommend_songs() and src/main.py
     """
-    # TODO: Implement scoring logic using your Algorithm Recipe from Phase 2.
-    # Expected return format: (score, reasons)
-    return []
+    weights = user_prefs["weights"]
+
+    # --- Numerical feature scores: 1 - |target - actual| ---
+    energy_score       = 1 - abs(user_prefs["target_energy"]       - song["energy"])
+    valence_score      = 1 - abs(user_prefs["target_valence"]      - song["valence"])
+    acousticness_score = 1 - abs(user_prefs["target_acousticness"] - song["acousticness"])
+    danceability_score = 1 - abs(user_prefs["target_danceability"] - song["danceability"])
+
+    # Tempo is in BPM, so normalize to [0, 1] before scoring
+    tempo_range        = user_prefs["tempo_max"] - user_prefs["tempo_min"]
+    song_tempo_norm    = (song["tempo_bpm"]                - user_prefs["tempo_min"]) / tempo_range
+    target_tempo_norm  = (user_prefs["target_tempo_bpm"]   - user_prefs["tempo_min"]) / tempo_range
+    tempo_score        = 1 - abs(target_tempo_norm - song_tempo_norm)
+
+    # --- Categorical bonuses ---
+    genre_bonus = weights["genre_bonus"] if song["genre"] == user_prefs["favorite_genre"] else 0.0
+    mood_bonus  = weights["mood_bonus"]  if song["mood"]  in user_prefs["acceptable_moods"] else 0.0
+
+    # --- Weighted total ---
+    score = (
+        energy_score       * weights["energy"]       +
+        valence_score      * weights["valence"]      +
+        tempo_score        * weights["tempo"]        +
+        acousticness_score * weights["acousticness"] +
+        danceability_score * weights["danceability"] +
+        genre_bonus +
+        mood_bonus
+    )
+
+    # --- Build reasons list ---
+    reasons = []
+    if genre_bonus:
+        reasons.append(f"genre match ({song['genre']})")
+    if mood_bonus:
+        reasons.append(f"mood match ({song['mood']})")
+
+    # Report the two numerical features that contributed the most
+    numeric_contribs = {
+        "energy":       energy_score       * weights["energy"],
+        "valence":      valence_score      * weights["valence"],
+        "tempo":        tempo_score        * weights["tempo"],
+        "acousticness": acousticness_score * weights["acousticness"],
+        "danceability": danceability_score * weights["danceability"],
+    }
+    top_two = sorted(numeric_contribs.items(), key=lambda x: x[1], reverse=True)[:2]
+    for feature, _ in top_two:
+        reasons.append(f"close {feature}")
+
+    return score, reasons
 
 def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
     """
     Functional implementation of the recommendation logic.
     Required by src/main.py
     """
-    # TODO: Implement scoring and ranking logic
-    # Expected return format: (song_dict, score, explanation)
-    return []
+    scored = [
+        (song, score, ", ".join(reasons))
+        for song in songs
+        for score, reasons in [score_song(user_prefs, song)]
+    ]
+    return sorted(scored, key=lambda x: x[1], reverse=True)[:k]

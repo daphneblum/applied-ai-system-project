@@ -65,7 +65,7 @@ Sort all (song, score, reasons) tuples by score descending and slice the top K r
 | **Mood label subjectivity** | Mood labels ("chill", "focused", "relaxed") are manually assigned and culturally subjective. Two songs that feel identical to a listener may carry different labels and score differently. |
 | **No feedback loop** | The system has no way to learn from skips, replays, or saves. A user who hates the top recommendation gets the same result every time. |
 | **Single-profile design** | Scores are computed for one user at a time with no collaborative signal. Niche or unusual taste profiles are served just as well (or as poorly) as common ones. |
-
+![screenshot of output](assets/screenshot.png)
 ---
 
 ## Getting Started
