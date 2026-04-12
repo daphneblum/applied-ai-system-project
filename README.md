@@ -29,6 +29,10 @@ Some prompts to answer:
 
 You can include a simple diagram or bullet list if helpful.
 
+Real-world recommenders like Spotify and YouTube learn your taste by watching what you play, skip, and save, then find patterns across millions of users to predict what you will enjoy next. They combine two main ideas: collaborative filtering, which says "people who liked the same things you did also loved this," and content-based filtering, which says "this song sounds and feels like the ones you already enjoy." In practice, those systems run on massive amounts of data and continuously update as your behavior changes.
+
+This version focuses on content-based filtering using a small catalog of 10 songs. Each song is described by five numerical features: energy, valence, tempo, acousticness, and danceability, plus a mood label. A user profile stores that same set of preferences. The recommender scores every song by measuring how close each of its features is to the user's preferences, applies weights so that more important features (like energy and valence) count more than less important ones (like danceability), and adds a small bonus when the song's mood matches the user's preferred mood. Songs are then ranked highest to lowest by their total score and the top matches are returned. The priority here is transparency: every recommendation can be explained by pointing directly at which features matched and by how much.
+
 ---
 
 ## Getting Started
