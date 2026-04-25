@@ -1,3 +1,6 @@
 pandas
 pytest
 streamlit
+google-genai
+chromadb
+sentence-transformers
