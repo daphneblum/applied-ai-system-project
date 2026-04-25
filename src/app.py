@@ -25,8 +25,8 @@ st.set_page_config(page_title="✨ Music Recommender", page_icon="🎵", layout=
 
 st.html("""
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
 <style>
-/* ─── 1. SHARED STYLES (Always active) ─── */
 h1, h2, h3, h4, h5, h6,
 p, li, label, input, textarea,
 button, .stButton > button,
@@ -42,114 +42,81 @@ button, .stButton > button,
     max-width: 760px !important;
 }
 
-header[data-testid="stHeader"] {
-    height: 2rem !important;
-    min-height: 2rem !important;
+h1 {
+    color: #8800bb !important;
+    text-shadow: 2px 2px 0px #dd88ff, 4px 4px 0px #cc66ff !important;
 }
 
-/* Scrollbar sizing */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-thumb { background: #cc44ff; }
-
-/* ─── 2. DARK MODE (Only active if system is Dark) ─── */
-@media (prefers-color-scheme: dark) {
-    .stApp, .stMain, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
-        background: linear-gradient(160deg, #1a0033 0%, #2d0050 40%, #1a003a 100%) !important;
-    }
-    h1 {
-        color: #ff88ff !important;
-        text-shadow: 3px 3px 0px #880088, 6px 6px 0px #440044 !important;
-    }
-    h2, h3 { color: #dd88ff !important; text-shadow: 2px 2px 0px #660066 !important; }
-    p, li, label { color: #f0bbff !important; }
-    
-    .stTextInput > div > div > input {
-        background-color: #1a0033 !important;
-        color: #ffbbff !important;
-        border: 3px solid #cc44ff !important;
-        box-shadow: 4px 4px 0px #660099 !important;
-    }
-    
-    .pixel-card {
-        background: rgba(30, 0, 50, 0.85) !important;
-        border: 3px solid #cc44ff !important;
-        box-shadow: 6px 6px 0px #440066 !important;
-        color: #f0bbff !important;
-    }
-    
-    hr { border-color: #660099 !important; }
-    ::-webkit-scrollbar-track { background: #2d0050; }
-    .section-label { color: #aa55dd; }
+h2, h3 {
+    color: #6600aa !important;
+    text-shadow: 1px 1px 0px #cc88ff !important;
 }
 
-/* ─── 3. LIGHT MODE (Only active if system is Light) ─── */
-@media (prefers-color-scheme: light) {
-    .stApp, .stMain, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
-        background: linear-gradient(160deg, #fce4ff 0%, #f5d0ff 40%, #ffe4f8 100%) !important;
-    }
-    h1 {
-        color: #8800bb !important;
-        text-shadow: 2px 2px 0px #dd88ff, 4px 4px 0px #cc66ff !important;
-    }
-    h2, h3 { color: #6600aa !important; text-shadow: 1px 1px 0px #cc88ff !important; }
-    p, li, label { color: #440055 !important; }
-    
-    .stTextInput > div > div > input {
-        background-color: #fff5ff !important;
-        color: #330044 !important;
-        border-color: #aa44cc !important;
-        box-shadow: 4px 4px 0px #cc88ff !important;
-    }
-    
-    .pixel-card {
-        background: rgba(255, 240, 255, 0.9) !important;
-        border-color: #aa44cc !important;
-        box-shadow: 6px 6px 0px #cc88dd !important;
-        color: #330044 !important;
-    }
-    
-    hr { border-color: #cc88dd !important; }
-    ::-webkit-scrollbar-track { background: #f5d0ff; }
-    .section-label { color: #7700aa; }
+.section-label {
+    color: #7700aa !important;
 }
 
-/* ─── 4. ANIMATIONS (Always available) ─── */
-@keyframes magical-glow {
-    0%, 100% { color: #ffddff; text-shadow: 0 0 4px #fff, 0 0 10px #ffaaff, 0 0 20px #ff44ff; }
-    50% { color: #ffffff; text-shadow: 0 0 6px #fff, 0 0 14px #ffccff, 0 0 28px #ff88ff; }
+.stTextInput input {
+    background-color: #fff5ff !important;
+    color: #330044 !important;
+    border: 3px solid #aa44cc !important;
+    box-shadow: 4px 4px 0px #cc88ff !important;
 }
 
-.pixel-card strong {
-    animation: magical-glow 2.5s ease-in-out infinite;
-    display: inline-block;
+.stTextInput input::placeholder {
+    color: #9966aa !important;
 }
 
-/* Button styles (Static gradients) */
+.pixel-card {
+    background: rgba(255, 240, 255, 0.9) !important;
+    border: 3px solid #aa44cc !important;
+    box-shadow: 6px 6px 0px #cc88dd !important;
+    color: #330044 !important;
+    padding: 1rem;
+}
+
 .stButton > button {
-    background: linear-gradient(180deg, #cc44ff 0%, #9900cc 100%) !important;
-    color: #ffffff !important;
-    border: 3px solid #ff88ff !important;
+    background: linear-gradient(180deg, #ffffff 0%, #f3c7ff 100%) !important;
+    color: #440055 !important;
+    border: 3px solid #aa44cc !important;
     border-radius: 0px !important;
+    box-shadow: 4px 4px 0px #cc88ff !important;
+}
+        
+.pixel-card strong {
+    position: relative;
+    display: inline-block;
+    animation: magical-glow 2.8s ease-in-out infinite;
+}
+
+@keyframes magical-glow {
+    0%, 100% {
+        color: #aa22cc;
+        text-shadow:
+            0 0 2px #fff,
+            0 0 6px #dd88ff,
+            0 0 12px #cc66ff,
+            0 0 20px #bb55dd;
+    }
+    50% {
+        color: #cc44ff;
+        text-shadow:
+            0 0 4px #fff,
+            0 0 10px #ffccff,
+            0 0 18px #ee99ff,
+            0 0 28px #dd77ff;
+    }
+}
+.pixel-card strong::after {
+    content: " ✦";
+    position: absolute;
+    right: -1.2em;
+    top: 0;
+    font-size: 0.7em;
+    animation: sparkle-twinkle 1.8s ease-in-out infinite;
+    color: #ff66dd;
 }
 </style>
-<script>
-(function() {
-    function syncTheme() {
-        var bg = getComputedStyle(document.documentElement)
-                     .getPropertyValue('--background-color').trim();
-        var isLight = bg === '#ffffff' || bg === '#fff' || bg === 'white';
-        document.documentElement.setAttribute(
-            'data-user-theme', isLight ? 'light' : 'dark'
-        );
-    }
-    syncTheme();
-    // Re-check whenever Streamlit updates :root styles (theme toggle writes here)
-    new MutationObserver(syncTheme).observe(document.head, {
-        childList: true, subtree: true
-    });
-    setInterval(syncTheme, 600);
-})();
-</script>
 """)
 
 # ── Header ───────────────────────────────────────────────────────────────────
