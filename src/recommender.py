@@ -74,7 +74,12 @@ def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
     danceability_score = 1 - abs(user_prefs["target_danceability"] - song["danceability"])
 
     # Tempo is in BPM, so normalize to [0, 1] before scoring
-    tempo_range        = user_prefs["tempo_max"] - user_prefs["tempo_min"]
+    tempo_range = user_prefs["tempo_max"] - user_prefs["tempo_min"]
+    if tempo_range == 0:
+        raise ZeroDivisionError(
+            "tempo_min and tempo_max are equal — cannot normalize tempo. "
+            "Set different values for tempo_min and tempo_max."
+        )
     song_tempo_norm    = (song["tempo_bpm"]                - user_prefs["tempo_min"]) / tempo_range
     target_tempo_norm  = (user_prefs["target_tempo_bpm"]   - user_prefs["tempo_min"]) / tempo_range
     tempo_score        = 1 - abs(target_tempo_norm - song_tempo_norm)

@@ -6,7 +6,7 @@ Run modes:
     python src/main.py --legacy   # original deterministic recommender (songs.csv)
 
 RAG mode requires:
-    1. ANTHROPIC_API_KEY set in your environment
+    1. GOOGLE_API_KEY set in your .env file
     2. The index built:  python scripts/build_index.py
 """
 

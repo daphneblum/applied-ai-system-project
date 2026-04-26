@@ -89,3 +89,31 @@ Building this made it clear that a recommender is not magic. It is a scoring for
 The most unexpected thing was how many songs disappeared. Seven out of twenty songs were never recommended to anyone. The system was not broken. It was working exactly as designed. But the design was narrow enough that a third of the catalog became invisible. That felt unfair in a way that was hard to notice from looking at the code alone. You only see it when you look at what is missing.
 
 This project also showed that bias in an AI system does not have to be intentional. Nobody decided that jazz fans should get bad recommendations. It happened because the catalog was small and the weight on energy was large. Small design choices, made for reasonable reasons, can add up to outcomes that seem unfair once you look at the full picture.
+
+---
+
+## 10. Ethics, Reliability, and Collaboration
+
+### Limitations and Biases in the System
+
+The RAG version of this project inherits several layers of bias before a single query is typed. The Spotify dataset reflects the catalog priorities of a major Western streaming platform. Genres that are underrepresented on Spotify, such as regional folk traditions or music from smaller markets, will appear rarely in the index even when 114,000 tracks are loaded. The embedding model used to convert song descriptions into vectors was trained primarily on English text, which means it may not capture cultural nuance in non-English music as accurately as it does for English-language pop or rock. Nothing in the interface tells a user any of this, so someone discovering music through the app might reasonably assume the catalog represents global music when it does not.
+
+The legacy MoodMatch 1.0 system has a different but equally real problem. Energy carries 30 percent of the total score while mood preference carries only 5 percent. In practice the system sorts songs by loudness before it considers whether a song sounds happy or sad. A user who asks for quiet, melancholic music will often receive loud tracks that happen to have low valence. Seven out of twenty songs in the catalog were never recommended to any of the three test profiles, which means those songs effectively do not exist from the user's point of view. The system was not broken. It was just narrow enough to make a third of the catalog invisible.
+
+### Could This AI Be Misused?
+
+Music recommendation carries a low risk of serious harm, but a few misuse scenarios are worth naming. A user could try to get the Gemini language model to produce off-topic or inappropriate content by embedding instructions inside the query text. The current guardrails block empty queries and queries longer than 500 characters, but they do not scan for adversarial prompt injection or attempts to override the system instruction. A more robust version would include a content moderation step before the query reaches the model.
+
+There is also a subtler concern about transparency. The app does not explain that its results reflect the biases of the Spotify dataset or that the embedding model was not trained on music specifically. A user who receives an unexpected or poor recommendation has no way of knowing whether the problem is the query, the catalog, or the model. Adding a short data provenance note to the interface would help users interpret results more critically instead of trusting them uncritically.
+
+### What Surprised Me While Testing Reliability
+
+The most surprising finding from the adversarial test suite was that the ZeroDivisionError caused by equal tempo bounds had gone undetected. The formula divided by the difference between tempo_min and tempo_max without first checking whether that difference was zero. It was a one-line guard that was easy to miss until a stress test triggered it directly. The fix was trivial, but the lesson was not: simple arithmetic errors can hide in code that looks correct on a quick read.
+
+The second surprise was discovering that seven songs in the legacy catalog were permanently invisible to all three test profiles. The system gave no warning about this. Nothing crashed, nothing logged an error, and nothing in the output indicated that part of the catalog was unreachable. Problems that silence data rather than crash the program are harder to notice than exceptions, and they tend to go undetected until someone looks specifically at what is missing rather than at what is returned.
+
+### Collaboration with AI During This Project
+
+Working with an AI assistant throughout this project was useful in ways that were not always obvious in advance. The most helpful suggestion was converting raw audio feature numbers into natural language sentences before embedding them. Rather than feeding a vector like (energy=0.42, tempo=78, acousticness=0.9) directly into the embedding model, the system generates a sentence like "calm and low energy, somewhat somber, very acoustic, slow tempo at 78 BPM." This made the embedding model significantly more effective because it was trained on text, not on arbitrary numerical sequences. A user query like "chill acoustic study music" maps naturally onto the same semantic space as those descriptions without any domain-specific fine-tuning, and that connection is what makes the retrieval step work.
+
+One suggestion that turned out to be incorrect was a comment in the main.py file that listed ANTHROPIC_API_KEY as the required environment variable. The project uses Google Gemini, not an Anthropic model, so the correct variable name is GOOGLE_API_KEY. A new developer following the setup instructions would have set the wrong variable and received a confusing authentication error with no obvious explanation. The error came from a mismatch between documentation and code, which is easy to introduce and easy to miss because both can look correct in isolation. It was only caught by reading both the docstring and the actual API call together.

@@ -11,6 +11,7 @@ Build the index first:
   python scripts/build_index.py
 """
 
+import logging
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -19,9 +20,17 @@ from sentence_transformers import SentenceTransformer
 from google import genai
 from google.genai import types
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
 CHROMA_PATH = "data/chroma_db"
 COLLECTION_NAME = "songs"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+
+MAX_QUERY_LENGTH = 500
 
 
 def song_to_text(
@@ -94,10 +103,13 @@ class RAGRecommender:
                 f"No index found at '{chroma_path}'. "
                 "Run 'python scripts/build_index.py' first."
             )
+        logger.info("Loading ChromaDB index from '%s'", chroma_path)
         self.chroma = chromadb.PersistentClient(path=chroma_path)
         self.collection = self.chroma.get_collection(COLLECTION_NAME)
+        logger.info("Loading embedding model '%s'", EMBEDDING_MODEL)
         self.embed_model = SentenceTransformer(EMBEDDING_MODEL)
         self.gemini = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
+        logger.info("RAGRecommender ready (%d songs indexed)", self.collection.count())
 
     def recommend(self, query: str, k: int = 5, retrieve_n: int = 15) -> str:
         """Return a Gemini-generated recommendation for the given natural-language query.
@@ -107,7 +119,21 @@ class RAGRecommender:
             k:          Number of songs to recommend in the final response.
             retrieve_n: How many candidate songs to pull from the vector store
                         before passing them to Gemini. Should be >= k.
+
+        Raises:
+            ValueError: If the query is empty or exceeds MAX_QUERY_LENGTH.
         """
+        query = query.strip()
+        if not query:
+            raise ValueError("Query must not be empty.")
+        if len(query) > MAX_QUERY_LENGTH:
+            raise ValueError(
+                f"Query is too long ({len(query)} chars). "
+                f"Please keep it under {MAX_QUERY_LENGTH} characters."
+            )
+
+        logger.info("Query received: %r (k=%d, retrieve_n=%d)", query, k, retrieve_n)
+
         # 1. Embed the user query with the same model used at index time
         query_embedding = self.embed_model.encode(query).tolist()
 
@@ -115,8 +141,26 @@ class RAGRecommender:
         results = self.collection.query(
             query_embeddings=[query_embedding],
             n_results=retrieve_n,
-            include=["documents", "metadatas"],
+            include=["documents", "metadatas", "distances"],
         )
+        candidates = results["documents"][0]
+        logger.info("Retrieved %d candidate songs from vector store", len(candidates))
+
+        # ChromaDB cosine space returns (1 - cosine_similarity); invert for readability
+        distances = results["distances"][0]
+        similarities = [round(1 - d, 3) for d in distances]
+        avg_sim = sum(similarities) / len(similarities) if similarities else 0.0
+        min_sim = min(similarities) if similarities else 0.0
+        logger.info(
+            "Retrieval confidence — avg similarity: %.3f, min: %.3f",
+            avg_sim, min_sim,
+        )
+        if avg_sim < 0.25:
+            logger.warning(
+                "Low retrieval confidence (avg=%.3f). "
+                "The query may be too niche or ambiguous for the indexed catalog.",
+                avg_sim,
+            )
 
         # 3. Format retrieved songs as numbered context for Gemini
         songs_context = "\n".join(
@@ -131,17 +175,25 @@ class RAGRecommender:
             f"Please recommend the top {k} songs from the list above "
             f"that best match this request, with a brief explanation for each."
         )
-        response = self.gemini.models.generate_content(
-            model="models/gemini-2.5-flash",
-            config=types.GenerateContentConfig(
-                system_instruction=(
-                    "You are a music recommendation assistant. "
-                    "Given a user's request and a list of candidate songs retrieved "
-                    "from a catalog, recommend the best matches. For each song you "
-                    "recommend, write a short, specific explanation of why it fits "
-                    "the user's request — mention mood, energy, tempo, or genre as relevant."
+
+        logger.info("Calling Gemini (model=gemini-2.5-flash)")
+        try:
+            response = self.gemini.models.generate_content(
+                model="models/gemini-2.5-flash",
+                config=types.GenerateContentConfig(
+                    system_instruction=(
+                        "You are a music recommendation assistant. "
+                        "Given a user's request and a list of candidate songs retrieved "
+                        "from a catalog, recommend the best matches. For each song you "
+                        "recommend, write a short, specific explanation of why it fits "
+                        "the user's request — mention mood, energy, tempo, or genre as relevant."
+                    ),
                 ),
-            ),
-            contents=prompt,
-        )
+                contents=prompt,
+            )
+        except Exception as exc:
+            logger.error("Gemini API call failed: %s", exc)
+            raise RuntimeError(f"Could not reach the Gemini API: {exc}") from exc
+
+        logger.info("Gemini response received successfully")
         return response.text

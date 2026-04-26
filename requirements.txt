@@ -1,6 +1,7 @@
-pandas
-pytest
-streamlit
-google-genai
-chromadb
-sentence-transformers
+python-dotenv>=1.0.0
+pandas>=2.0.0
+pytest>=7.0.0
+streamlit>=1.30.0
+google-genai>=1.0.0
+chromadb>=0.5.0
+sentence-transformers>=3.0.0
