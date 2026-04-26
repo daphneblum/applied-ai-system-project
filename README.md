@@ -4,6 +4,9 @@
 
 ---
 
+## Screenshot of Light/Dark Mode
+![screenshot](assets/music.png)
+
 ## Title and Summary
 
 This project is a music recommendation system that lets you describe what you want to hear in plain English and returns a curated playlist with explanations. Type something like *"chill acoustic songs for late night studying"* and the system finds songs that match that vibe, then uses a language model to rank and explain the results.
