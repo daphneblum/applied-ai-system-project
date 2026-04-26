@@ -118,9 +118,12 @@ python src/main.py --legacy  # deterministic scoring mode
 ### Running tests
 
 ```bash
-pytest                              # all tests
-pytest tests/test_adversarial.py -v # edge-case tests only
+python -m pytest                              # all tests
+python -m pytest tests/test_rag_unit.py -v   # RAG unit tests (no API key needed)
+python -m pytest tests/test_adversarial.py -v # edge-case tests only
 ```
+
+> **Note:** use `python -m pytest` rather than `pytest` directly. If your virtual environment's Python version differs from the system Python, bare `pytest` may pick up the wrong interpreter and fail to find installed packages.
 
 ---
 
