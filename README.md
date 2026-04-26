@@ -167,6 +167,10 @@ The outputs below are from real runs of the system. The legacy CLI mode (`python
 
 ![Legacy CLI — High-Energy Pop profile](assets/screenshot.png)
 
+**RAG mode output** (`streamlit run src/app.py` → type the query above):
+
+![RAG mode — upbeat pop songs for a workout](assets/rag_workout.png)
+
 ---
 
 ### Example 2 — Late-night study session
@@ -206,6 +210,10 @@ The outputs below are from real runs of the system. The legacy CLI mode (`python
        Why:   mood match (chill), close energy, close valence
 ```
 
+**RAG mode output** (`streamlit run src/app.py` → type the query above):
+
+![RAG mode — chill acoustic songs for late night studying](assets/rag_studying.png)
+
 ---
 
 ### Example 3 — High-intensity mood
@@ -244,6 +252,11 @@ The outputs below are from real runs of the system. The legacy CLI mode (`python
        Score: 0.70  [##############      ]
        Why:   close energy, close valence
 ```
+
+**RAG mode output** (`streamlit run src/app.py` → type the query above):
+
+<!-- Add your screenshot: save it as assets/rag_angry.png and the image will appear here -->
+![RAG mode — dark intense metal for when I'm angry](assets/rag_angry.png)
 
 ![Legacy CLI — Chill Lofi and Deep Intense Rock profiles](assets/screenshot2.png)
 
